@@ -70,12 +70,11 @@ niche_data = {
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, "Привіт! Я допоможу створити ідеї для просування твого бізнесу. Напиши, як він називається та чим займається?")
-    try:
-        with open("lead_magnet.pdf", "rb") as file:
-            bot.send_document(message.chat.id, file)
-    except Exception as e:
-        bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте наявність файлу lead_magnet.pdf")
+    bot.send_message(
+        message.chat.id,
+        "Привіт! Я допоможу створити ідеї для просування твого бізнесу.\n"
+        "Напиши, як він називається та чим займається 😊"
+    )
 
 @bot.message_handler(commands=['гайд'])
 def send_guide(message):
@@ -104,6 +103,7 @@ def handle_message(message):
         f"💡 Лід-магніт:\n{data['lead']}"
     )
 
+        response += "\n\n📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд"
     bot.send_message(message.chat.id, response)
 
 bot.polling()
