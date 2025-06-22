@@ -11,15 +11,14 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 bot = telebot.TeleBot(TOKEN)
 openai.api_key = OPENAI_API_KEY
 
+# Пам’ять про дату старту доступу
 user_access = {}
 
 def has_access(user_id):
     now = datetime.now()
     if user_id in user_access:
         started = user_access[user_id]
-        if now - started > timedelta(days=7):
-            return False
-        return True
+        return now - started <= timedelta(days=7)
     else:
         user_access[user_id] = now
         return True
@@ -82,22 +81,4 @@ def handle_message(message):
 
 bot.polling()
 
-        bot.send_message(message.chat.id, "⛔️ Безкоштовний доступ завершено. Щоб продовжити користуватись ботом, придбай підписку за $9.")
-        return
-
-    business = message.text
-    niche = detect_niche(business)
-    data = niche_data.get(niche, niche_data["default"])
-
-    response = (
-        f"✅ Опис бізнесу отримано.\n\n"
-        f"📌 Цільова аудиторія:\n{data['audience']}\n\n"
-        f"📢 Ідея для просування:\n{data['idea']}\n\n"
-        f"💡 Лід-магніт:\n{data['lead']}"
-    )
-
-    response += "\n\n📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд"
-    bot.send_message(message.chat.id, response)
-
-bot.polling()
 
