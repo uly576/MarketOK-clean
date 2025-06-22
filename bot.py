@@ -82,7 +82,7 @@ def send_guide(message):
         with open("lead_magnet.pdf", "rb") as file:
             bot.send_document(message.chat.id, file)
     except Exception as e:
-    bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте наявність файлу lead_magnet.pdf")
+        bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте наявність файлу lead_magnet.pdf")
 
 @bot.message_handler(func=lambda m: True)
 def handle_message(message):
