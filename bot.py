@@ -9,14 +9,16 @@ TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 bot = telebot.TeleBot(TOKEN)
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
+# Зберігаємо дату початку використання
 user_access = {}
 
 def has_access(user_id):
     now = datetime.now()
     if user_id in user_access:
-        return now - user_access[user_id] <= timedelta(days=7)
+        started = user_access[user_id]
+        return now - started <= timedelta(days=7)
     else:
         user_access[user_id] = now
         return True
@@ -29,8 +31,8 @@ def generate_promo_idea(business_description):
         f"Відповідай українською мовою, структуровано."
     )
     try:
-        response = client.chat.completions.create(
-            model="gpt-4",
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Для openai==0.28.0
             messages=[
                 {"role": "system", "content": "Ти маркетолог."},
                 {"role": "user", "content": prompt}
@@ -38,14 +40,18 @@ def generate_promo_idea(business_description):
             max_tokens=800,
             temperature=0.7
         )
-        return response.choices[0].message.content.strip()
+        return response["choices"][0]["message"]["content"].strip()
     except Exception as e:
         print("OpenAI error:", e)
         return "⚠️ Сталася помилка при зверненні до OpenAI."
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, "Привіт! Напиши, чим займається твій бізнес 🛍️")
+    bot.send_message(
+        message.chat.id,
+        "Привіт! Я допоможу створити ідеї для просування твого бізнесу.\n"
+        "Напиши, як він називається та чим займається 😊"
+    )
 
 @bot.message_handler(commands=['гайд'])
 def send_guide(message):
@@ -54,26 +60,29 @@ def send_guide(message):
             bot.send_document(message.chat.id, file)
     except Exception as e:
         print("PDF error:", e)
-        bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте, чи файл існує.")
+        bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте, чи файл lead_magnet.pdf існує.")
 
-@bot.message_handler(commands=['аналіз'])
-def handle_analytics(message):
+@bot.message_handler(func=lambda m: True)
+def handle_message(message):
     user_id = message.from_user.id
 
     if not has_access(user_id):
-        bot.send_message(message.chat.id, "⛔️ Безкоштовний доступ завершено. Підписка $9.")
+        bot.send_message(
+            message.chat.id,
+            "⛔️ Безкоштовний доступ завершено. Щоб продовжити користуватись ботом, придбай підписку за $9."
+        )
         return
 
+    business = message.text
     bot.send_message(message.chat.id, "🔍 Аналізую ваш бізнес...")
-    result = generate_promo_idea(message.text)
-    bot.send_message(message.chat.id, result)
-    bot.send_message(message.chat.id, "📎 Щоб отримати PDF-гайд — напиши /гайд")
 
-@bot.message_handler(func=lambda m: True)
-def fallback(message):
-    bot.send_message(message.chat.id, "Напиши /аналіз + короткий опис твого бізнесу 📝")
+    result = generate_promo_idea(business)
+    bot.send_message(message.chat.id, result)
+
+    bot.send_message(message.chat.id, "📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд")
 
 bot.polling()
+
 
 
 
