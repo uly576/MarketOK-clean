@@ -42,8 +42,7 @@ def generate_promo_idea(business_description):
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return "⚠️ Сталася помилка при зверненні до OpenAI."
-
+        return f"⚠️ Помилка OpenAI: {e}"
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(
