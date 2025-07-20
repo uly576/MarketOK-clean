@@ -42,7 +42,9 @@ def generate_promo_idea(business_description):
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"⚠️ Помилка OpenAI: {e}"
+        print("OpenAI error:", e)
+        return "⚠️ Сталася помилка при зверненні до OpenAI."
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(
@@ -79,5 +81,3 @@ def handle_message(message):
     bot.send_message(message.chat.id, "📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд")
 
 bot.polling()
-
-
