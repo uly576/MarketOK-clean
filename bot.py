@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import openai
 
+# Завантаження змінних із .env
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -11,7 +12,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 bot = telebot.TeleBot(TOKEN)
 openai.api_key = OPENAI_API_KEY
 
-# Зберігаємо дату старту доступу
+# Словник доступу по користувачу
 user_access = {}
 
 def has_access(user_id):
@@ -23,6 +24,7 @@ def has_access(user_id):
         user_access[user_id] = now
         return True
 
+# Функція генерації маркетингової ідеї через OpenAI
 def generate_promo_idea(business_description):
     prompt = (
         f"Опиши цільову аудиторію для бізнесу: {business_description}.\n"
@@ -32,7 +34,7 @@ def generate_promo_idea(business_description):
     )
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "Ти маркетолог."},
                 {"role": "user", "content": prompt}
@@ -42,9 +44,9 @@ def generate_promo_idea(business_description):
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        print("OpenAI error:", e)  # Вивід помилки у Render
-        return "⚠️ Сталася помилка при зверненні до OpenAI."
+        return f"⚠️ OpenAI помилка: {str(e)}"
 
+# Обробка команди /start
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(
@@ -53,6 +55,7 @@ def start_message(message):
         "Напиши, як він називається та чим займається 😊"
     )
 
+# Обробка команди /гайд — надсилає PDF
 @bot.message_handler(commands=['гайд'])
 def send_guide(message):
     try:
@@ -61,6 +64,7 @@ def send_guide(message):
     except Exception:
         bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте, чи файл lead_magnet.pdf існує.")
 
+# Обробка будь-якого повідомлення
 @bot.message_handler(func=lambda m: True)
 def handle_message(message):
     user_id = message.from_user.id
@@ -80,5 +84,7 @@ def handle_message(message):
 
     bot.send_message(message.chat.id, "📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд")
 
+# Запуск бота
 bot.polling()
+
 
