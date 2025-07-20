@@ -4,27 +4,25 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import openai
 
-# Завантаження змінних середовища
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Ініціалізація
 bot = telebot.TeleBot(TOKEN)
 openai.api_key = OPENAI_API_KEY
 
-# Зберігання доступу для користувачів (7 днів)
+# Пам’ять про дату старту доступу
 user_access = {}
 
 def has_access(user_id):
     now = datetime.now()
     if user_id in user_access:
-        return now - user_access[user_id] <= timedelta(days=7)
+        started = user_access[user_id]
+        return now - started <= timedelta(days=7)
     else:
         user_access[user_id] = now
         return True
 
-# Генерація відповіді через OpenAI
 def generate_promo_idea(business_description):
     prompt = (
         f"Опиши цільову аудиторію для бізнесу: {business_description}.\n"
@@ -33,21 +31,20 @@ def generate_promo_idea(business_description):
         f"Відповідай українською мовою, структуровано."
     )
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = openai.chat.completions.create(
+            model="gpt-4",
             messages=[
-                {"role": "system", "content": "Ти досвідчений маркетолог."},
+                {"role": "system", "content": "Ти маркетолог."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=900,
+            max_tokens=800,
             temperature=0.7
         )
-        return response['choices'][0]['message']['content'].strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         print("OpenAI error:", e)
         return "⚠️ Сталася помилка при зверненні до OpenAI."
 
-# Обробка команди /start
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(
@@ -56,7 +53,6 @@ def start_message(message):
         "Напиши, як він називається та чим займається 😊"
     )
 
-# Команда для PDF-гайду
 @bot.message_handler(commands=['гайд'])
 def send_guide(message):
     try:
@@ -65,9 +61,8 @@ def send_guide(message):
     except Exception:
         bot.send_message(message.chat.id, "⚠️ Не вдалося надіслати гайд. Перевірте, чи файл lead_magnet.pdf існує.")
 
-# Основна логіка бота
-@bot.message_handler(func=lambda m: True)
-def handle_message(message):
+@bot.message_handler(commands=['аналіз'])
+def handle_analytics(message):
     user_id = message.from_user.id
 
     if not has_access(user_id):
@@ -82,10 +77,19 @@ def handle_message(message):
 
     result = generate_promo_idea(business)
     bot.send_message(message.chat.id, result)
+
     bot.send_message(message.chat.id, "📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд")
 
-# Запуск бота
+# Обробка всіх інших повідомлень
+@bot.message_handler(func=lambda m: True)
+def fallback(message):
+    bot.send_message(
+        message.chat.id,
+        "Щоб розпочати аналіз, скористайся командою /аналіз і вкажи опис свого бізнесу 😊"
+    )
+
 bot.polling()
+
 
 
 
