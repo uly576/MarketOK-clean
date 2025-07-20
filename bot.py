@@ -11,7 +11,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 bot = telebot.TeleBot(TOKEN)
 openai.api_key = OPENAI_API_KEY
 
-# Пам’ять про дату старту доступу
+# Зберігаємо дату старту доступу
 user_access = {}
 
 def has_access(user_id):
@@ -32,7 +32,7 @@ def generate_promo_idea(business_description):
     )
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Ти маркетолог."},
                 {"role": "user", "content": prompt}
@@ -42,7 +42,7 @@ def generate_promo_idea(business_description):
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        print("OpenAI error:", e)
+        print("OpenAI error:", e)  # Вивід помилки у Render
         return "⚠️ Сталася помилка при зверненні до OpenAI."
 
 @bot.message_handler(commands=['start'])
@@ -81,3 +81,4 @@ def handle_message(message):
     bot.send_message(message.chat.id, "📎 Хочеш безкоштовний PDF-гайд? Напиши /гайд")
 
 bot.polling()
+
