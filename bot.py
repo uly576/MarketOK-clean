@@ -24,12 +24,9 @@ def send_welcome(message):
     reply_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     reply_markup.add("📊 Аналіз поста", "ℹ️ Про бота")
 
-    bot.send_message(
-        chat_id,
-        "Привіт! Обери, що хочеш зробити:",
-        reply_markup=reply_markup,
-        reply_markup_inline=inline_markup
-    )
+    # Надсилаємо два повідомлення: одне з інлайн, інше з reply
+    bot.send_message(chat_id, "Привіт! Обери, що хочеш зробити:", reply_markup=reply_markup)
+    bot.send_message(chat_id, "👇 Натисни кнопку нижче:", reply_markup=inline_markup)
 
 # Обробка інлайн-кнопок
 @bot.callback_query_handler(func=lambda call: True)
@@ -50,6 +47,7 @@ def reply_buttons_handler(message):
         bot.send_message(message.chat.id, "Я — твій маркетинговий помічник.")
 
 bot.polling()
+
 
 
 
